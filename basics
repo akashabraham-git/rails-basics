@@ -1,0 +1,42 @@
+#to create a new project
+rails new project-name
+
+#starting server
+$bin/rails server
+
+#to define a route in routes.rb
+get "/route-name", to: "route-name#action-name"
+eg : root "articles#index"
+
+#generate controller
+$bin/rails generate controller name action --skip-routes
+
+#generate model
+$bin/rails generate model Article title:string body:text  
+#name is singular
+
+#for migration
+$bin/rails db:migrate
+
+#pull up console
+$bin/rails console
+
+#create new row(object)
+>article = Article.new(title: "something", body: "something") 
+#save to database
+>article.save
+#to fetch all articles
+>Article.all
+
+#define instance variables in controller to access in view
+def index
+    @articles = Article.all
+end
+
+#use @articles in views/articles/index.html.erb
+#<% > for evaluating ruby code
+#<%= > for evaluating and outputing ruby code
+
+
+
+
