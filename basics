@@ -37,6 +37,12 @@ end
 #<% > for evaluating ruby code
 #<%= > for evaluating and outputing ruby code
 
-
-
+#partials
+#reusable view snippets
+views/articles      :    _article.html.erb
+<%= render 'article' %>
+#partials can use instance variables with @ and local variables(passed like props, preferred)
+<%= render 'article', article : @articles, submit : 'Enter'>
+#common/shared partials
+views/shared/_article.html.erb    <%= render 'shared/article'>   
 
