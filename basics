@@ -18,6 +18,10 @@ $bin/rails generate model Article title:string body:text
 #for migration
 $bin/rails db:migrate
 
+#for modifying schema of a model
+$bin/rails generate migration AddDetailsToProducts part_number:string price:decimal
+
+
 #pull up console
 $bin/rails console
 
@@ -46,3 +50,62 @@ views/articles      :    _article.html.erb
 #common/shared partials
 views/shared/_article.html.erb    <%= render 'shared/article'>   
 
+#READ
+def show
+    @article = Article.find(params[:id])   #input will be added as value of id key of params hash
+end
+
+#resources
+resources :articles
+#maps all routes for a controller like index, show, new, create..
+
+#link_to
+<% link_to article.title, article %>   #2nd argument gets automatically converted from model object to path
+
+#CREATE
+#new just creates a new object and passes to the view, create : instatiates a new object with values and attempts to save it
+  def new
+    @article = Article.new
+  end
+
+#strong parameters : security feature that whitelists which form attributes can be saved to the database
+def create
+    @article = Article.new(article_params)
+
+private
+    def article_params
+      params.require(:article).permit(:title, :body)
+    end
+
+#validations : add constraints to model
+  validates :body, presence: true, length: { minimum: 10 }
+
+#UPDATE
+#edit - just fetches from db
+#update - fetch and update with submitted form data
+  def edit
+    @article = Article.find(params[:id])
+    
+  end
+
+  def update
+    @article = Article.find(params[:id])
+    if @article.update(article_params)
+      redirect_to @article
+
+#DELETE
+#destroy
+  def destroy
+    @article = Article.find(params[:id])
+    @article.destroy
+
+#creating another model
+bin/rails generate model Comment commenter:string body:text article:references
+#references : adds a new int column to specify the article id and makes it a foreign key
+
+#association
+belongs_to :article   #in comments model
+has_many :comments    #in article model
+
+#concern
+#like modules, extend ActiveSupport::Concern to write validations, can write class_methods and other methods to be used in models that include the concern
