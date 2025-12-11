@@ -1,74 +1,74 @@
-#to create a new project
+# to create a new project
 rails new project-name
 
-#starting server
+# starting server
 $bin/rails server
 
-#to define a route in routes.rb
+# to define a route in routes.rb
 get "/route-name", to: "route-name#action-name"
 eg : root "articles#index"
 
-#generate controller
+# generate controller
 $bin/rails generate controller name action --skip-routes
 
-#generate model
+# generate model
 $bin/rails generate model Article title:string body:text  
 #name is singular
 
-#for migration
+# for migration
 $bin/rails db:migrate
 
-#for modifying schema of a model
+# for modifying schema of a model
 $bin/rails generate migration AddDetailsToProducts part_number:string price:decimal
 
 
-#pull up console
+# pull up console
 $bin/rails console
 
-#create new row(object)
+# create new row(object)
 >article = Article.new(title: "something", body: "something") 
-#save to database
+# save to database
 >article.save
-#to fetch all articles
+# to fetch all articles
 >Article.all
 
-#define instance variables in controller to access in view
+# define instance variables in controller to access in view
 def index
     @articles = Article.all
 end
 
-#use @articles in views/articles/index.html.erb
+# use @articles in views/articles/index.html.erb
 #<% > for evaluating ruby code
 #<%= > for evaluating and outputing ruby code
 
-#partials
+# partials
 #reusable view snippets
 views/articles      :    _article.html.erb
 <%= render 'article' %>
-#partials can use instance variables with @ and local variables(passed like props, preferred)
+# partials can use instance variables with @ and local variables(passed like props, preferred)
 <%= render 'article', article : @articles, submit : 'Enter'>
-#common/shared partials
+# common/shared partials
 views/shared/_article.html.erb    <%= render 'shared/article'>   
 
-#READ
+# READ
 def show
     @article = Article.find(params[:id])   #input will be added as value of id key of params hash
 end
 
-#resources
+# resources
 resources :articles
-#maps all routes for a controller like index, show, new, create..
+# maps all routes for a controller like index, show, new, create..
 
-#link_to
+# link_to
 <% link_to article.title, article %>   #2nd argument gets automatically converted from model object to path
 
-#CREATE
-#new just creates a new object and passes to the view, create : instatiates a new object with values and attempts to save it
+# CREATE
+# new just creates a new object and passes to the view, create : instatiates a new object with values and attempts to save it
   def new
     @article = Article.new
   end
 
-#strong parameters : security feature that whitelists which form attributes can be saved to the database
+# strong parameters : security feature that whitelists which form attributes can be saved to the database
 def create
     @article = Article.new(article_params)
 
@@ -77,12 +77,12 @@ private
       params.require(:article).permit(:title, :body)
     end
 
-#validations : add constraints to model
+# validations : add constraints to model
   validates :body, presence: true, length: { minimum: 10 }
 
-#UPDATE
-#edit - just fetches from db
-#update - fetch and update with submitted form data
+# UPDATE
+# edit - just fetches from db
+# update - fetch and update with submitted form data
   def edit
     @article = Article.find(params[:id])
     
@@ -93,19 +93,100 @@ private
     if @article.update(article_params)
       redirect_to @article
 
-#DELETE
+# if invalid parameter is passed, use find_by which will return nil instead of exception by find
+  @article = Article.find_by(id: params[:id])
+  unless @article
+    redirect_to articles_path
+    return
+
+# DELETE
 #destroy
   def destroy
     @article = Article.find(params[:id])
     @article.destroy
 
-#creating another model
+# creating another model
 bin/rails generate model Comment commenter:string body:text article:references
 #references : adds a new int column to specify the article id and makes it a foreign key
 
-#association
+# association
 belongs_to :article   #in comments model
 has_many :comments    #in article model
 
-#concern
+#to access all the comments of an article, use safe navigation
+&comments = @article&.comments  #return nil if article is nil
+
+# to pass an array as query parameter
+/articles/search?arr[]=hi&arr[]=bye&status=active
+# to use this in view, use 
+article_search_path(
+    arr: ['hi','bye'],
+    status: "active"
+)
+# to access in controller, inside the action search
+@arr = params[:arr]
+
+#for JSON use JSON.parse(params[:key]) in action
+
+# concern
 #like modules, extend ActiveSupport::Concern to write validations, can write class_methods and other methods to be used in models that include the concern
+
+# CALLBACKS : code that gets triggered whenever an object's state is changed
+
+    before_validation
+    after_validation
+    before_save
+    around_save
+    before_create
+    around_create
+    after_create
+    after_save
+    after_commit / after_rollback
+
+class User < ApplicationRecord
+  before_update :check_role_change
+
+  private
+    def check_role_change
+      if role_changed?
+        Rails.logger.info("User role changed to #{role}")
+      end
+    end
+
+# association callbacks: triggered on change in associated collection
+    before_add
+    after_add
+    before_remove
+    after_remove
+eg - has_many :books, before_add: :check_limit
+
+# conditional callbacks
+before_save :filter_content, if: [:method1?, :method2?]
+
+# ASSOCIATION : connection between two Active Record models
+    belongs_to
+    has_one
+    has_many
+    has_many :through
+    has_one :through
+    has_and_belongs_to_many
+
+
+# dynamic methods : create methods dynamically using define_method
+STATUSES = ['draft', 'published', 'archived']
+  STATUSES.each do |status_name|
+    define_method "#{status_name}?" do
+      status == status_name
+    end
+
+# indexing - adds index so that retreival is faster
+add_index :tablename, :attr1, attr2       # add this in migration
+
+# Scope - reusable, chainable query methods defined on your models
+scope :by_author, ->(author_id) { where(author_id: author_id) }
+Article.by_author(5) 
+
+default_scope
+# Applies an ordering to all queries on the Article model
+  default_scope { order(created_at: :desc) }
+
